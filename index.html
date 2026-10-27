@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bangladesh Village Game</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      background: #87ceeb;
+    }
+
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      touch-action: none;
+    }
+
+    #title {
+      position: fixed;
+      top: 12px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      color: white;
+      font-size: 20px;
+      font-weight: bold;
+      text-shadow: 2px 2px 4px black;
+      pointer-events: none;
+    }
+
+    #controls {
+      position: fixed;
+      bottom: 22px;
+      left: 18px;
+      display: grid;
+      grid-template-columns: 55px 55px 55px;
+      grid-template-rows: 55px 55px;
+      gap: 5px;
+    }
+
+    button {
+      border: 2px solid white;
+      border-radius: 12px;
+      background: #222b;
+      color: white;
+      font-size: 23px;
+      touch-action: none;
+    }
+
+    #up {
+      grid-column: 2;
+    }
+
+    #left {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    #down {
+      grid-column: 2;
+      grid-row: 2;
+    }
+
+    #right {
+      grid-column: 3;
+      grid-row: 2;
+    }
+
+    #status {
+      position: fixed;
+      bottom: 25px;
+      right: 15px;
+      padding: 12px;
+      border-radius: 10px;
+      background: #ffffffdd;
+      font-size: 13px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="title">🇧🇩 বাংলাদেশ গ্রাম গেম</div>
+
+  <canvas id="game"></canvas>
+
+  <div id="controls">
+    <button id="up">⬆️</button>
+    <button id="left">⬅️</button>
+    <button id="down">⬇️</button>
+    <button id="right">➡️</button>
+  </div>
+
+  <div id="status">গ্রামে স্বাগতম!</div>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    let player = { x: 0, y: 0, speed: 3 };
+    const keys = {};
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      draw();
+    }
+
+    function drawHouse(x, y, color) {
+      ctx.fillStyle = "#a87945";
+      ctx.fillRect(x, y, 90, 65);
+
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(x - 10, y);
+      ctx.lineTo(x + 45, y - 35);
+      ctx.lineTo(x + 100, y);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = "#49301d";
+      ctx.fillRect(x + 35, y + 30, 22, 35);
+
+      ctx.fillStyle = "#8de0ff";
+      ctx.fillRect(x + 8, y + 15, 18, 18);
+      ctx.fillRect(x + 64, y + 15, 18, 18);
+    }
+
+    function drawBike(x, y) {
+      ctx.strokeStyle = "#171717";
+      ctx.lineWidth = 4;
+
+      ctx.beginPath();
+      ctx.arc(x, y + 10, 12, 0, Math.PI * 2);
+      ctx.arc(x + 42, y + 10, 12, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.strokeStyle = "#e53935";
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(x, y + 10);
+      ctx.lineTo(x + 17, y - 5);
+      ctx.lineTo(x + 30, y + 10);
+      ctx.lineTo(x + 42, y + 10);
+      ctx.moveTo(x + 17, y - 5);
+      ctx.lineTo(x + 30, y - 7);
+      ctx.stroke();
+    }
+
+    function draw() {
+      const w = canvas.width;
+      const h = canvas.height;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // আকাশ ও গ্রামের মাঠ
+      ctx.fillStyle = "#87ceeb";
+      ctx.fillRect(0, 0, w, h * 0.38);
+
+      ctx.fillStyle = "#65ad4b";
+      ctx.fillRect(0, h * 0.38, w, h * 0.62);
+
+      // গ্রামের রাস্তা
+      ctx.fillStyle = "#c5b28b";
+      ctx.fillRect(w * 0.36, h * 0.38, w * 0.28, h * 0.62);
+
+      // রাস্তার দাগ
+      ctx.strokeStyle = "#f8eac8";
+      ctx.lineWidth = 3;
+      ctx.setLineDash([18, 16]);
+      ctx.beginPath();
+      ctx.moveTo(w / 2, h * 0.4);
+      ctx.lineTo(w / 2, h);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // বাড়িঘর
+      drawHouse(w * 0.07, h * 0.40, "#8b4513");
+      drawHouse(w * 0.70, h * 0.43, "#a52a2a");
+      drawHouse(w * 0.08, h * 0.70, "#654321");
+
+      // গাছ
+      for (let i = 0; i < 9; i++) {
+        const x = (i * 127 + 35) % w;
+        const y = h * 0.52 + (i % 3) * 65;
+
+        if (x > w * 0.34 && x < w * 0.66) continue;
+
+        ctx.fillStyle = "#70452b";
+        ctx.fillRect(x - 4, y, 8, 25);
+
+        ctx.fillStyle = "#176b31";
+        ctx.beginPath();
+        ctx.arc(x, y - 5, 19, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // খেলোয়াড়
+      const px = w / 2 + player.x;
+      const py = h * 0.78 + player.y;
+
+      ctx.fillStyle = "#173fbd";
+      ctx.fillRect(px - 10, py - 20, 20, 27);
+
+      ctx.fillStyle = "#e7b58a";
+      ctx.beginPath();
+      ctx.arc(px, py - 27, 10, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#222";
+      ctx.fillRect(px - 9, py + 7, 7, 15);
+      ctx.fillRect(px + 2, py + 7, 7, 15);
+
+      drawBike(w * 0.69, h * 0.76);
+
+      document.getElementById("status").textContent =
+        "গ্রামে ঘুরে দেখো! 🌳";
+    }
+
+    function move(direction, pressed) {
+      keys[direction] = pressed;
+    }
+
+    const buttons = {
+      up: "ArrowUp",
+      down: "ArrowDown",
+      left: "ArrowLeft",
+      right: "ArrowRight"
+    };
+
+    for (const id in buttons) {
+      const button = document.getElementById(id);
+      const key = buttons[id];
+
+      button.addEventListener("pointerdown", e => {
+        e.preventDefault();
+        move(key, true);
+      });
+
+      button.addEventListener("pointerup", () => move(key, false));
+      button.addEventListener("pointerleave", () => move(key, false));
+      button.addEventListener("pointercancel", () => move(key, false));
+    }
+
+    window.addEventListener("keydown", e => keys[e.key] = true);
+    window.addEventListener("keyup", e => keys[e.key] = false);
+
+    function update() {
+      if (keys.ArrowUp) player.y -= player.speed;
+      if (keys.ArrowDown) player.y += player.speed;
+      if (keys.ArrowLeft) player.x -= player.speed;
+      if (keys.ArrowRight) player.x += player.speed;
+
+      player.x = Math.max(-canvas.width * 0.25,
+        Math.min(canvas.width * 0.25, player.x));
+
+      player.y = Math.max(-canvas.height * 0.6,
+        Math.min(canvas.height * 0.12, player.y));
+
+      draw();
+      requestAnimationFrame(update);
+    }
+
+    window.addEventListener("resize", resize);
+    resize();
+    update();
+  </script>
+</body>
+</html>
